@@ -1,0 +1,10 @@
+bin/
+obj/
+/packages/
+riderModule.iml
+/_ReSharper.Caches/
+.idea/
+.DS_Store
+
+# AOC requests that you do not include your input files in your repository
+Input/
