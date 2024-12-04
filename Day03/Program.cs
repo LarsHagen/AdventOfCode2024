@@ -4,9 +4,9 @@ using System.Text.RegularExpressions;
 var memoryInput = File.ReadAllText("Input/Input.txt");
 
 //Use regex to find all "mul"
-var mulInstructions = Regex.Matches(memoryInput, "mul\\(\\d{1,3},\\d{1,3}\\)");
-var doInstructions = Regex.Matches(memoryInput, "do\\(\\)");
-var dontInstructions = Regex.Matches(memoryInput, "don't\\(\\)");
+var mulInstructions = Regex.Matches(memoryInput, @"mul\(\d{1,3},\d{1,3}\)");
+var doInstructions = Regex.Matches(memoryInput, @"do\(\)");
+var dontInstructions = Regex.Matches(memoryInput, @"don't\(\)");
 
 var mulSum = 0;
 
@@ -20,13 +20,14 @@ Console.WriteLine("Part 1: " + mulSum);
 
 mulSum = 0;
 
-//Add mulInstructions and doInstructions and dontInstructions to a list
+//Add mulInstructions and doInstructions and dontInstructions to a list and order by their index in the input
 var allInstructions = new List<Match>();
 allInstructions.AddRange(mulInstructions);
 allInstructions.AddRange(doInstructions);
 allInstructions.AddRange(dontInstructions);
-
 allInstructions = allInstructions.OrderBy(x => x.Index).ToList();
+
+
 bool mulEnabled = true;
 foreach (var instruction in allInstructions)
 {
