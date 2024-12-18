@@ -1,95 +1,108 @@
 ﻿using Day17;
 
-/*var testComputer = new MagicUnfoldingComputer
-{
-    Instructions = new List<Base8Number> { Base8Number.CreateFromBase8("2"), Base8Number.CreateFromBase8("6") },
-    registerC = Base8Number.CreateFromBase10(9)
-};
-
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();
-
-testComputer = new()
-{
-    Instructions = new List<Base8Number>
-    {
-        Base8Number.CreateFromBase8("5"),
-        Base8Number.CreateFromBase8("0"),
-        Base8Number.CreateFromBase8("5"),
-        Base8Number.CreateFromBase8("1"),
-        Base8Number.CreateFromBase8("5"),
-        Base8Number.CreateFromBase8("4")
-    },
-    registerA = Base8Number.CreateFromBase10(10)
-};
-
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();
-
-testComputer = new()
-{
-    Instructions = new List<Base8Number>
-    {
-        Base8Number.CreateFromBase8("0"),
-        Base8Number.CreateFromBase8("1"),
-        Base8Number.CreateFromBase8("5"),
-        Base8Number.CreateFromBase8("4"),
-        Base8Number.CreateFromBase8("3"),
-        Base8Number.CreateFromBase8("0")
-    },
-    registerA = Base8Number.CreateFromBase10(2024)
-};
-
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();
-
-testComputer = new()
-{
-    Instructions = new List<Base8Number>
-    {
-        Base8Number.CreateFromBase8("1"),
-        Base8Number.CreateFromBase8("7")
-    },
-    registerB = Base8Number.CreateFromBase10(29)
-};
-
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();
-
-testComputer = new()
-{
-    Instructions = new List<Base8Number>
-    {
-        Base8Number.CreateFromBase8("4"),
-        Base8Number.CreateFromBase8("0")
-    },
-    registerB = Base8Number.CreateFromBase10(2024),
-    registerC = Base8Number.CreateFromBase10(43690)
-};
-
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();
-
-testComputer = ComputerFromInput(File.ReadAllLines("Input/Example.txt"));
-testComputer.Run();
-testComputer.PrintRegisters();
-testComputer.PrintOutput();
-Console.WriteLine();*/
-
 var computer = ComputerFromInput(File.ReadAllLines("Input/Input.txt"));
 computer.Run();
-Console.WriteLine("Part 1:");
-computer.PrintOutput();
+
+string part1 = "Part 1: " + string.Join(',', computer.GetOutput());
+Console.WriteLine(part1);
+Console.WriteLine();
+Console.WriteLine("Press any key to start part 2");
+Console.Read();
+
+computer = ComputerFromInput(File.ReadAllLines("Input/Input.txt"));
+
+int digitToGuess = 0;
+Dictionary<int, List<string>> base8Matches = new();
+var desiredOutput = string.Join(',', computer.Instructions.Select(i => i.Base8));
+while (true)
+{
+    if (digitToGuess == 16)
+        break;
+    
+    if (!base8Matches.ContainsKey(digitToGuess))
+        base8Matches[digitToGuess] = new();
+
+    List<string> base8BaseInputs = new();
+    if (digitToGuess > 0)
+    {
+        base8BaseInputs = base8Matches[digitToGuess - 1];
+    }
+    else
+    {
+        base8BaseInputs.Add("");
+    }
+
+    if (base8BaseInputs.Count == 0)
+    {
+        Console.WriteLine("Ran out!");
+        break;
+    }
+
+    foreach (var baseInput in base8BaseInputs)
+    {
+        for (int i = 0; i < 8; i++)
+        {
+            var number = baseInput + i;
+            computer.registerA = Base8Number.CreateFromBase8(number);
+            computer.registerB = new();
+            computer.registerC = new();
+            computer.instructionPointer = 0;
+            computer.output.Clear();
+
+            var startAsBase8 = computer.registerA.Base8.ToString();
+            var startAsBase10 = computer.registerA.Base10.ToString();
+            
+            Console.Clear();
+            computer.Run();
+            Console.WriteLine("A input: " + startAsBase10 + ". Base8: " + startAsBase8);
+            Console.WriteLine("Desired output:  " + desiredOutput);
+            computer.PrintOutput();
+
+
+            var output = computer.output;
+            var partInstructions = computer.Instructions.GetRange(computer.Instructions.Count - output.Count, output.Count);
+            bool hit = true;
+
+            for (int j = 0; j < output.Count; j++)
+            {
+                if (output[j].Base10 != partInstructions[j].Base10)
+                {
+                    hit = false;
+                    break;
+                }
+            }
+
+            Console.WriteLine("Hit: " + hit);
+
+            if (hit)
+            {
+                base8Matches[digitToGuess].Add(number);
+            }
+
+            Thread.Sleep(5);
+        }
+    }
+
+    digitToGuess++;
+}
+
+Console.WriteLine("Done. Found " + base8Matches[digitToGuess - 1].Count + " matches");
+
+Base8Number fastest = Base8Number.CreateFromBase10(long.MaxValue);
+
+foreach (var match in base8Matches[digitToGuess - 1])
+{
+    var _ = Base8Number.CreateFromBase8(match);
+    if (_.Base10 < fastest.Base10)
+    {
+        fastest = _;
+    }
+}
+
+Console.WriteLine("Fastest match: " + fastest.Base8);
+Console.WriteLine();
+Console.WriteLine(part1);
+Console.WriteLine("Part 2: " + fastest.Base10);
 
 MagicUnfoldingComputer ComputerFromInput(string[] input)
 {
@@ -120,24 +133,33 @@ class MagicUnfoldingComputer
         Console.WriteLine($"A: {registerA.Base10}, B: {registerB.Base10}, C: {registerC.Base10}");
     }
     
-    public void PrintOutput()
+    public string GetOutput()
     {
-        Console.WriteLine("Output: " + string.Join(",", output.Select(o => o.Base8)));
+        return string.Join(",", output.Select(o => o.Base8));
     }
     
-    public void Run(int maxOutputLength = int.MaxValue)
+    public void PrintOutput()
     {
+        Console.WriteLine("Computed output: " + GetOutput());
+    }
+    
+    public void Run()
+    {
+        int cycles = 0;
         while (instructionPointer < Instructions.Count)
         {
-            if (output.Count >= maxOutputLength)
-                break;
-            
             var opcode = Instructions[instructionPointer];
             var operand = Instructions[instructionPointer + 1];
 
             GetInstruction(opcode).Invoke(operand);
             instructionPointer += 2;
+            cycles++;
+            
+            if (cycles > 1000)
+                break;
         }
+        
+        Console.WriteLine("Cycles: " + cycles);
     }
     
     Action<Base8Number> GetInstruction(Base8Number opcode)
@@ -158,8 +180,8 @@ class MagicUnfoldingComputer
 
     void Adv(Base8Number operand)
     {
-        int numerator = registerA.Base10;
-        int denominator = (int)Math.Pow(2, ComboOperandTranslate(operand).Base10);
+        long numerator = registerA.Base10;
+        long denominator = (long)Math.Pow(2, ComboOperandTranslate(operand).Base10);
         registerA = Base8Number.CreateFromBase10(numerator / denominator);
     }
 
@@ -180,7 +202,7 @@ class MagicUnfoldingComputer
     {
         if (registerA.Base10 != 0)
         {
-            instructionPointer = operand.Base10 - 2;
+            instructionPointer = (int)operand.Base10 - 2;
         }
     }
 
@@ -198,15 +220,15 @@ class MagicUnfoldingComputer
 
     void Bdv(Base8Number operand)
     {
-        int numerator = registerA.Base10;
-        int denominator = (int)Math.Pow(2, ComboOperandTranslate(operand).Base10);
+        long numerator = registerA.Base10;
+        long denominator = (long)Math.Pow(2, ComboOperandTranslate(operand).Base10);
         registerB = Base8Number.CreateFromBase10(numerator / denominator);
     }
 
     void Cdv(Base8Number operand)
     {
-        int numerator = registerA.Base10;
-        int denominator = (int)Math.Pow(2, ComboOperandTranslate(operand).Base10);
+        long numerator = registerA.Base10;
+        long denominator = (long)Math.Pow(2, ComboOperandTranslate(operand).Base10);
         registerC = Base8Number.CreateFromBase10(numerator / denominator);
     }
 
@@ -229,3 +251,4 @@ class MagicUnfoldingComputer
         throw new Exception("Invalid operand");
     }
 }
+

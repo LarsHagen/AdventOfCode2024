@@ -4,10 +4,10 @@ namespace Day17;
 
 public class Base8Number
 {
-    private int _base10 = 0;
+    private long _base10 = 0;
     private string _base8 = "0";
 
-    public int Base10
+    public long Base10
     {
         get => _base10;
         set
@@ -31,12 +31,12 @@ public class Base8Number
         return new Base8Number { Base8 = base8 };
     }
     
-    public static Base8Number CreateFromBase10(int base10)
+    public static Base8Number CreateFromBase10(long base10)
     {
         return new Base8Number { Base10 = base10 };
     }
     
-    private string ConvertToBase8(int base10)
+    private string ConvertToBase8(long base10)
     {
         var result = new StringBuilder();
 
@@ -49,15 +49,15 @@ public class Base8Number
         return result.ToString();
     }
 
-    private int ConvertToBase10(string base8)
+    private long ConvertToBase10(string base8)
     {
-        int result = 0;
+        long result = 0;
         int position = 0;
         
         foreach (var digit in base8.Reverse())
         {
             //converted = digit * (base ^ position)
-            result += int.Parse(digit.ToString()) * (int)Math.Pow(8, position);
+            result += long.Parse(digit.ToString()) * (long)Math.Pow(8, position);
             position++;
         }
 
