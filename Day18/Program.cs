@@ -1,5 +1,5 @@
 ﻿
-bool visualize = false;
+bool visualize = true;
 
 List<(int x, int y)> fallList = File.ReadAllLines("Input/Input.txt")
     .Select(s => s.Split(','))
@@ -42,13 +42,15 @@ else
 }
 
 int step = stepsToFillPart1;
+List<(int x, int y)> lastValidPath = path;
+
 while (true)
 {
-    //step++;
-    var validPath = PathFinding(corruptedPointsPerStep[step]);
+    List<(int x, int y)> validPath = PathFinding(corruptedPointsPerStep[step]);
     
     if (validPath.Count > 0)
     {
+        lastValidPath = validPath;
         if (visualize)
         {
             Console.Clear();
@@ -69,6 +71,14 @@ while (true)
     else
     {
         var blockingPoint = fallList[step];
+        
+        if (visualize)
+        {
+            Console.Clear();
+            lastValidPath.RemoveRange(0, lastValidPath.IndexOf(blockingPoint));
+            PrintMap(corruptedPointsPerStep[step], lastValidPath, blockingPoint);
+        }
+
         Console.WriteLine("Part 2: " + blockingPoint.x + "," + blockingPoint.y); 
         break;
     }
@@ -139,25 +149,36 @@ List<(int x, int y)> PathFinding(HashSet<(int x, int y)> corruptedPoints)
     return new();
 }
 
-void PrintMap(HashSet<(int x, int y)> corruptedPoints, List<(int x, int y)> path = null)
+void PrintMap(HashSet<(int x, int y)> corruptedPoints, List<(int x, int y)> path = null, (int x, int y)? highlightPoint = null)
 {
     for (int y = 0; y < mapHeight; y++)
     {
         for (int x = 0; x < mapWidth; x++)
         {
-            if (path != null && path.Contains((x, y)))
+            if (highlightPoint != null && highlightPoint.Value == (x, y))
             {
-                Console.BackgroundColor = ConsoleColor.Green;
-                Console.Write(" ");
+                Console.BackgroundColor = ConsoleColor.Blue;
+                Console.Write("X");
                 continue;
             }
             
-            Console.BackgroundColor = corruptedPoints.Contains((x, y)) ? ConsoleColor.Red : ConsoleColor.Black;
+            if (path != null && path.Contains((x, y)))
+            {
+                Console.BackgroundColor = ConsoleColor.DarkGreen;
+                Console.Write(" ");
+                continue;
+            }
+
+            if (corruptedPoints.Contains((x, y)))
+                Console.BackgroundColor = ConsoleColor.Red;
+            else
+                Console.ResetColor();
+            
             Console.Write(" ");
         }
         Console.WriteLine();
     }
-    Console.BackgroundColor = ConsoleColor.Black;
+    Console.ResetColor();
 }
 
 class Node
