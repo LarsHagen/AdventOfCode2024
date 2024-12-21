@@ -39,6 +39,29 @@ public class Keypad
         }
     }
     
+    public List<string> GetSequencesFromTo((int x, int y) start, (int x, int y) end)
+    {
+        var horizontalInput = end.x < start.x ? new string('<', start.x - end.x) : new string('>', end.x - start.x);
+        var verticalInput = end.y < start.y ? new string('^', start.y - end.y) : new string('v', end.y - start.y);
+        
+        HashSet<string> directionInputs = new();
+        directionInputs.Add(verticalInput + horizontalInput);
+        directionInputs.Add(horizontalInput + verticalInput);
+        
+        
+        
+        //Build all possible sequences
+        List<string> result = new();
+        foreach (var directionInput in directionInputs)
+        {
+            result.Add(directionInput);// + "A");
+        }
+        
+        //Remove sequences that hit the empty spot
+        //result.RemoveAll(SequenceHitsEmptySpot);
+        
+        return result;
+    }
     
     public List<string> GetAllButtonPressSequence(string code)
     {
@@ -49,8 +72,10 @@ public class Keypad
         foreach (var c in code)
         {
             var coordinate = _buttonCoordinates[c];
+            directionInputs.Add(GetSequencesFromTo(currentPosition, coordinate));
+            currentPosition = coordinate;
             
-            string directions = ""; 
+            /*string directions = ""; 
             if (coordinate.x < currentPosition.x)
             {
                 directions += new string('<', currentPosition.x - coordinate.x);
@@ -70,7 +95,7 @@ public class Keypad
             }
             //Console.WriteLine("Directions: " + directions);
             directionInputs.Add(GetAllPermutations(directions).ToList());
-            currentPosition = coordinate;
+            currentPosition = coordinate;*/
         }
         
         
@@ -137,39 +162,5 @@ public class Keypad
         }
 
         return false;
-    }
-    
-    public static HashSet<string> GetAllPermutations(string input)
-    {
-        if (input.Length < 2)
-        {
-            return new HashSet<string>{input};
-        }
-        
-        HashSet<string> result = new HashSet<string>();
-        Permute(input.ToCharArray(), 0, input.Length - 1, result);
-        return result;
-    }
-
-    private static void Permute(char[] array, int left, int right, HashSet<string> result)
-    {
-        if (left == right)
-        {
-            result.Add(new string(array));
-        }
-        else
-        {
-            for (int i = left; i <= right; i++)
-            {
-                Swap(ref array[left], ref array[i]);
-                Permute(array, left + 1, right, result);
-                Swap(ref array[left], ref array[i]); // backtrack
-            }
-        }
-    }
-    
-    private static void Swap(ref char a, ref char b)
-    {
-        (a, b) = (b, a);
     }
 }

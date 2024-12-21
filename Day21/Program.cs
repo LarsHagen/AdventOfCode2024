@@ -29,18 +29,13 @@ string GetUserInput(string code)
         allButtonPressSequenceRobot1.AddRange(keypadRobot1.GetAllButtonPressSequence(buttonSequence));
     }
 
-    Console.WriteLine("");
     List<string> allButtonPressSequenceRobot2 = new();
-
-    for (var index = 0; index < allButtonPressSequenceRobot1.Count; index++)
+    foreach (var buttonSequence in allButtonPressSequenceRobot1)
     {
-        var buttonSequence = allButtonPressSequenceRobot1[index];
-        Console.SetCursorPosition(0, Console.GetCursorPosition().Top - 1);
-        Console.WriteLine("Working: " + index + "/" + allButtonPressSequenceRobot1.Count);
         allButtonPressSequenceRobot2.AddRange(keypadRobot2.GetAllButtonPressSequence(buttonSequence));
     }
 
-    Console.WriteLine("Done");
+    //Console.WriteLine("Done");
     var shortestSequence = allButtonPressSequenceRobot2.OrderBy(x => x.Length).First();
     return shortestSequence;
 }
