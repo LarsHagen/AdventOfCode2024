@@ -1,11 +1,12 @@
-using System.Security.Cryptography;
-
 namespace Day21;
 
 public class Keypad
 {
     public List<List<char>> Buttons { get; set; }
     public (int x, int y) EmptyButton { get; set; }
+    
+    private Dictionary<char, (int x, int y)> _buttonCoordinates = new();
+    private (int x, int y) _positionA;
     
     public Keypad(bool robotStyle)
     {
@@ -16,6 +17,7 @@ public class Keypad
             Buttons.Add(new List<char>{'<', 'v', '>'});
             
             EmptyButton = (0, 0);
+            _positionA = (2, 0);
         }
         else
         {
@@ -25,39 +27,29 @@ public class Keypad
             Buttons.Add(new List<char>{' ', '0', 'A'});
             
             EmptyButton = (0, 3);
+            _positionA = (2, 3);
         }
-    }
-    
-    public List<(int x, int y)> GetButtonCoordinates(params char[] buttonValues)
-    {
-        List<(int x, int y)> coordinates = new();
-
-        foreach (var button in buttonValues)
+        
+        for (int y = 0; y < Buttons.Count; y++)
         {
-            for (int y = 0; y < Buttons.Count; y++)
+            for (int x = 0; x < Buttons[y].Count; x++)
             {
-                for (int x = 0; x < Buttons[y].Count; x++)
-                {
-                    if (Buttons[y][x] ==button)
-                    {
-                        coordinates.Add((x, y));
-                    }
-                }
+                _buttonCoordinates.Add(Buttons[y][x], (x, y));
             }
         }
-        
-        
-        return coordinates;
     }
     
-    public List<string> GetAllButtonPressSequence(List<(int x, int y)> coordinates)
+    
+    public List<string> GetAllButtonPressSequence(string code)
     {
-        var currentPosition = GetButtonCoordinates('A').First();
+        var currentPosition = _positionA;
 
         List<List<string>> directionInputs = new();
         
-        foreach (var coordinate in coordinates)
+        foreach (var c in code)
         {
+            var coordinate = _buttonCoordinates[c];
+            
             string directions = ""; 
             if (coordinate.x < currentPosition.x)
             {
@@ -86,22 +78,25 @@ public class Keypad
         List<string> result = new();
         foreach (var directionInput in directionInputs)
         {
-            var allPossibleSequencesSoFar = result.ToList();
-            result.Clear();
+            List<string> nextIteration = new();
+            
             foreach (var direction in directionInput)
             {
-                if (allPossibleSequencesSoFar.Count == 0)
+                var directionWithA = direction + "A";
+                if (result.Count == 0)
                 {
-                    result.Add(direction + "A");
+                    nextIteration.Add(directionWithA);
                 }
                 else
                 {
-                    foreach (var sequence in allPossibleSequencesSoFar)
+                    foreach (var sequence in result)
                     {
-                        result.Add(sequence + direction + "A");
+                        nextIteration.Add(sequence + directionWithA);
                     }
                 }
             }
+            
+            result = nextIteration;
         }
         
         //Remove sequences that hit the empty spot
@@ -114,7 +109,7 @@ public class Keypad
 
     private bool SequenceHitsEmptySpot(string sequence)
     {
-        (int x, int y) currentPosition = GetButtonCoordinates('A').First();
+        (int x, int y) currentPosition = _positionA;
         foreach (var direction in sequence)
         {
             switch (direction)
@@ -143,28 +138,6 @@ public class Keypad
 
         return false;
     }
-    
-    /*private HashSet<string> GetAllPermutations(string input)
-    {
-        HashSet<string> result = new();
-        if (input.Length == 1)
-        {
-            result.Add(input);
-            return result;
-        }
-        
-        for (int i = 0; i < input.Length; i++)
-        {
-            var remaining = input.Remove(i, 1);
-            var permutations = GetAllPermutations(remaining);
-            foreach (var permutation in permutations)
-            {
-                result.Add(input[i] + permutation);
-            }
-        }
-
-        return result;
-    }*/
     
     public static HashSet<string> GetAllPermutations(string input)
     {
@@ -197,8 +170,6 @@ public class Keypad
     
     private static void Swap(ref char a, ref char b)
     {
-        char temp = a;
-        a = b;
-        b = temp;
+        (a, b) = (b, a);
     }
 }

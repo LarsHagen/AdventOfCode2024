@@ -21,14 +21,12 @@ string GetUserInput(string code)
     var keypadRobot1 = new Keypad(true);
     var keypadRobot2 = new Keypad(true);
 
-    var codeCoordinates = keypadDoor.GetButtonCoordinates(code.ToArray());
-    List<string> allButtonSequenceDoor = keypadDoor.GetAllButtonPressSequence(codeCoordinates);
+    List<string> allButtonSequenceDoor = keypadDoor.GetAllButtonPressSequence(code);
     
     List<string> allButtonPressSequenceRobot1 = new();
     foreach (var buttonSequence in allButtonSequenceDoor)
     {
-        codeCoordinates = keypadRobot1.GetButtonCoordinates(buttonSequence.ToArray());
-        allButtonPressSequenceRobot1.AddRange(keypadRobot1.GetAllButtonPressSequence(codeCoordinates));
+        allButtonPressSequenceRobot1.AddRange(keypadRobot1.GetAllButtonPressSequence(buttonSequence));
     }
 
     Console.WriteLine("");
@@ -39,8 +37,7 @@ string GetUserInput(string code)
         var buttonSequence = allButtonPressSequenceRobot1[index];
         Console.SetCursorPosition(0, Console.GetCursorPosition().Top - 1);
         Console.WriteLine("Working: " + index + "/" + allButtonPressSequenceRobot1.Count);
-        codeCoordinates = keypadRobot2.GetButtonCoordinates(buttonSequence.ToArray());
-        allButtonPressSequenceRobot2.AddRange(keypadRobot2.GetAllButtonPressSequence(codeCoordinates));
+        allButtonPressSequenceRobot2.AddRange(keypadRobot2.GetAllButtonPressSequence(buttonSequence));
     }
 
     Console.WriteLine("Done");
