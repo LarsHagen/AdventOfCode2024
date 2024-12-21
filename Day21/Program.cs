@@ -1,7 +1,7 @@
 ﻿using Day21;
 
 List<string> doorCodes = File.ReadAllLines("Input/Input.txt").ToList();
-
+CachedCalculatedMoveCost wow = new CachedCalculatedMoveCost();
 int result = 0;
 
 foreach (var doorCode in doorCodes)
@@ -14,6 +14,28 @@ foreach (var doorCode in doorCodes)
 
 Console.WriteLine("Part 1: " + result);
 
+long sumPart2 = 0;
+foreach (var doorCode in doorCodes)
+{
+    sumPart2 += GetShortestNewMethod(doorCode) * int.Parse(doorCode[..^1]);
+}
+
+Console.WriteLine("Part 2: " + sumPart2);
+
+long GetShortestNewMethod(string code)
+{
+    var keypadDoor = new Keypad(false);
+    List<string> allButtonSequenceDoor = keypadDoor.GetAllButtonPressSequence(code);
+    
+    List<long> allCostsNew = new();
+    
+    foreach (var buttonSequence in allButtonSequenceDoor)
+    {
+        allCostsNew.Add(wow.GetCost(buttonSequence, 3));
+    }
+    
+    return allCostsNew.MinBy(x => x);
+}
 
 string GetUserInput(string code)
 {
@@ -35,7 +57,24 @@ string GetUserInput(string code)
         allButtonPressSequenceRobot2.AddRange(keypadRobot2.GetAllButtonPressSequence(buttonSequence));
     }
 
-    //Console.WriteLine("Done");
+
     var shortestSequence = allButtonPressSequenceRobot2.OrderBy(x => x.Length).First();
+    return shortestSequence;
+}
+
+string OldMethod(string input, int layers)
+{
+    var keypadRobot = new Keypad(true);
+    List<string> allButtonSequenceDoor = keypadRobot.GetAllButtonPressSequence(input);
+    for (int i = 1; i < layers; i++)
+    {
+        List<string> allButtonPressSequenceRobot = new();
+        foreach (var buttonSequence in allButtonSequenceDoor)
+        {
+            allButtonPressSequenceRobot.AddRange(keypadRobot.GetAllButtonPressSequence(buttonSequence));
+        }
+        allButtonSequenceDoor = allButtonPressSequenceRobot;
+    }
+    var shortestSequence = allButtonSequenceDoor.OrderBy(x => x.Length).First();
     return shortestSequence;
 }

@@ -5,7 +5,7 @@ public class Keypad
     public List<List<char>> Buttons { get; set; }
     public (int x, int y) EmptyButton { get; set; }
     
-    private Dictionary<char, (int x, int y)> _buttonCoordinates = new();
+    public Dictionary<char, (int x, int y)> ButtonCoordinates = new();
     private (int x, int y) _positionA;
     
     public Keypad(bool robotStyle)
@@ -34,7 +34,7 @@ public class Keypad
         {
             for (int x = 0; x < Buttons[y].Count; x++)
             {
-                _buttonCoordinates.Add(Buttons[y][x], (x, y));
+                ButtonCoordinates.Add(Buttons[y][x], (x, y));
             }
         }
     }
@@ -45,59 +45,32 @@ public class Keypad
         var verticalInput = end.y < start.y ? new string('^', start.y - end.y) : new string('v', end.y - start.y);
         
         HashSet<string> directionInputs = new();
-        directionInputs.Add(verticalInput + horizontalInput);
         directionInputs.Add(horizontalInput + verticalInput);
-        
-        
-        
-        //Build all possible sequences
-        List<string> result = new();
-        foreach (var directionInput in directionInputs)
-        {
-            result.Add(directionInput);// + "A");
-        }
+        directionInputs.Add(verticalInput + horizontalInput);
         
         //Remove sequences that hit the empty spot
-        //result.RemoveAll(SequenceHitsEmptySpot);
+        List<string> result = new(directionInputs);
+        result.RemoveAll(SequenceHitsEmptySpot);
         
         return result;
     }
     
-    public List<string> GetAllButtonPressSequence(string code)
+    public List<string> GetAllButtonPressSequence(string code, (int x, int y)? start = null)
     {
         var currentPosition = _positionA;
+        if (start != null)
+        {
+            currentPosition = start.Value;
+        }
 
         List<List<string>> directionInputs = new();
         
         foreach (var c in code)
         {
-            var coordinate = _buttonCoordinates[c];
+            var coordinate = ButtonCoordinates[c];
             directionInputs.Add(GetSequencesFromTo(currentPosition, coordinate));
             currentPosition = coordinate;
-            
-            /*string directions = ""; 
-            if (coordinate.x < currentPosition.x)
-            {
-                directions += new string('<', currentPosition.x - coordinate.x);
-            }
-            else if (coordinate.x > currentPosition.x)
-            {
-                directions += new string('>', coordinate.x - currentPosition.x);
-            }
-            
-            if (coordinate.y < currentPosition.y)
-            {
-                directions += new string('^', currentPosition.y - coordinate.y);
-            }
-            else if (coordinate.y > currentPosition.y)
-            {
-                directions += new string('v', coordinate.y - currentPosition.y);
-            }
-            //Console.WriteLine("Directions: " + directions);
-            directionInputs.Add(GetAllPermutations(directions).ToList());
-            currentPosition = coordinate;*/
         }
-        
         
         //Build all possible sequences
         List<string> result = new();
@@ -124,12 +97,7 @@ public class Keypad
             result = nextIteration;
         }
         
-        //Remove sequences that hit the empty spot
-        result.RemoveAll(SequenceHitsEmptySpot);
-        
         return result;
-
-        //TODO: avoid gaps? Doesn't seem necessary for the result as only the length is used
     }
 
     private bool SequenceHitsEmptySpot(string sequence)
